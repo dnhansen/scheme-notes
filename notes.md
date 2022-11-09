@@ -1,13 +1,15 @@
 # Scheme notes
 
-## Installation
+## MIT/GNU Scheme
+
+### Installation
 
 To install MIT/GNU Scheme, simply run
 
     sudo apt-get install mit-scheme
 
 
-## Usage
+### Usage
 
 The REPL can be started using the `scheme` command. There is also the `mit-scheme` command, and they seem to be virtually identical.
 
@@ -49,9 +51,9 @@ There are eight mutually disjoint *base types*:
 7. vector
 8. procedure
 
-Furthermore, the empty list is a special object of its own type. If `T` is a base type, then the predicate `T?` can be used to test the type of an object. (In fact, it seems like these predicates can be taken to *define* the base types.) The predicate `null?` tests for the empty list.
+Furthermore, the empty list is a special object of its own type. If `T` is a base type, then the predicate `T?` can be used to test the type of an object. (In fact, it seems like these predicates can be taken to *define* the base types, such that e.g. a boolean by definition is an object for which `boolean?` returns `#t`.) The predicate `null?` tests for the empty list.
 
-Since types are associated with objects and neither to the locations of objects nor to variables bound to these locations, it is possible to replace the object at a location with an object for a different type. In general, the contents of a location can be modified by *assignment* using a `set!` expression. For example, the program
+Since types are associated with objects and neither with the locations of objects nor with variables bound to these locations, it is possible to replace the object at a location with an object for a different type. In general, the contents of a location can be modified by *assignment* using a `set!` expression. For example, the program
 
     (define x 2)
     (set! x "hello")
@@ -131,7 +133,7 @@ The syntax of Scheme is organised in several levels, some of which are:
 
 For instance, an external representation for the list containing the numbers `42` and `117` might be `(42 117)` or `(042 117 )`. In particular, datum values can have different external representations. Note that e.g. `(a b c)` and `(a . (b . c . ()))` are equivalent.
 
-It is important to distinguish between a sequence of characters that is the *external representation* of a value, and an expression that *evaluates* to a value. For instance, `(+ 1 2)` is a sequence of characters that is an external representation of the list whose elements are the three data `+`, `1` and `2`, the first of which is an identifier (in fact a so-called *peculiar* identifier), and the latter two are numbers. On the other hand, `(+ 1 2)` is not an expression that evaluates to this list; rather, it is an expression that evaluates to the number `3`. However, if `<datum>` is a syntactic datum, then the expression
+It is important to distinguish between a sequence of characters that is the *external representation* of a value, and an expression that *evaluates* to a value. For instance, '`(+ 1 2)`' is a sequence of characters that is an external representation of the list whose elements are the three data `+`, `1` and `2`, the first of which is an identifier (in fact a so-called *peculiar* identifier), and the latter two are numbers. On the other hand, `(+ 1 2)` is not an expression that evaluates to this list; rather, it is an expression that evaluates to the number `3`. However, if `<datum>` is a syntactic datum, then the expression
 
     (quote <datum>)
 
@@ -141,3 +143,38 @@ Note that since numbers and strings are their own external representations, they
 
 
 [TODO expressions, which of the above sequences are expressions?]
+
+### Forms
+
+The specification further introduces the term *forms*. According to the R6RS specification,  '[s]yntactic data in Scheme source code are called *forms*' (§4). The authors seem to emphasise here that forms are also syntactic data and represent objects. Elsewhere it is stated that '*form* is the general name for a syntactic part
+of a Scheme program' (§1.5). Furthermore, the authors state that '[t]he syntactic data are a superset of the Scheme forms' (§1.10). Presumably they have in mind that the syntactic data are a *proper* superset of the forms, though I am not entirely sure what the distinction is. Is the difference that forms are specifically syntactic forms that are part of *source code*? I do not know.
+
+We distinguish between several kinds of forms, not mutually exclusive:
+
+1. *Subforms*. A form is a subform of another form if it is nested inside this form. For instance, `23` is a subform of `(define x 23)`.
+2. *Special forms*. These seem to be one of the following:
+   1. Compound data whose first position is a *syntactic keyword*. Several syntactic keywords are prespecified in Scheme, e.g. `let`, `define` and `lambda`, but it is possible to create new syntactic keywords using macros.
+   2. Identifier macros allow for the creation of other kinds of special forms. [TODO]
+3. *Derived forms*. Forms whose semantics can be derived from other forms using syntactic transformations. We give several examples of this below
+
+A first example of a derived form is a `let` expression. For instance, the expressions
+
+    (let ((x 23)
+          (y 42))
+      (+ x y))
+
+and
+
+    ((lambda (x y) (+ x y)) 23 42)
+
+are equivalent. Thus, a `let` expression may be translated into a procedure call and a `lambda` expression. For another example, notice that the `define` expression
+
+    (define (f x)
+      (+ x 42))
+
+is equivalent to
+
+    (define f
+      (lambda (x) (+ x 42)))
+
+However, I'm not sure it is possible to derive any `define` expression whatsoever in this manner, since the R6RS specification says that '*some* procedure definitions are also derived forms' (§1.9, emphasis mine).
